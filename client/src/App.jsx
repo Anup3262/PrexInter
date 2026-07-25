@@ -1,0 +1,63 @@
+import {
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+import CreateInterview from "./pages/CreateInterview";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Interview from "./pages/Interview";
+
+function App() {
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<Navigate to="/login" replace />}
+      />
+
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/interviews/create"
+        element={
+          <ProtectedRoute>
+            <CreateInterview />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+  path="/interviews/:id"
+  element={
+    <ProtectedRoute>
+      <Interview />
+    </ProtectedRoute>
+  }
+/>
+
+      <Route
+        path="*"
+        element={<Navigate to="/dashboard" replace />}
+      />
+    </Routes>
+    
+
+    
+  );
+}
+
+export default App;
