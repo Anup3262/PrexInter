@@ -11,6 +11,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Interview from "./pages/Interview";
 import Result from "./pages/Result";
+import ResumeInterview from "./pages/ResumeInterview";
+
 function App() {
   return (
     <Routes>
@@ -29,6 +31,11 @@ function App() {
             <Dashboard />
           </ProtectedRoute>
         }
+      />
+      
+      <Route
+           path="/resume-interview"
+           element={<ResumeInterview />}
       />
 
       <Route
