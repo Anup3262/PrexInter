@@ -9,6 +9,8 @@ const {
   deleteInterview,
   generateQuestions,
   saveAnswer,
+  evaluateInterview,
+  
 } = require("../controllers/interviewController");
 
 const router = express.Router();
@@ -26,6 +28,12 @@ router.put(
   "/:id/answer",
   protect,
   saveAnswer
+);
+
+router.post(
+  "/:id/evaluate",
+  protect,
+  evaluateInterview
 );
 
 router.get("/:id", protect, getInterviewById);

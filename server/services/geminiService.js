@@ -96,6 +96,85 @@ Requirements:
   return validQuestions;
 };
 
+const evaluateInterviewAnswers = async ({ role, difficulty, questions }) => {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is not loaded");
+  }
+
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+  });
+
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `
+You are an experienced interview evaluator.
+
+Evaluate the candidate's answers for this interview.
+
+Role: ${role}
+Difficulty: ${difficulty}
+
+Questions and answers:
+${JSON.stringify(
+  questions.map((item, index) => ({
+    index,
+    question: item.question,
+    answer: item.answer || "",
+  })),
+  null,
+  2
+)}
+
+Return only valid JSON in this exact format:
+
+{
+  "overallScore": 0,
+  "summary": "Overall feedback",
+  "results": [
+    {
+      "questionIndex": 0,
+      "score": 0,
+      "feedback": "Specific feedback",
+      "idealAnswer": "A strong example answer"
+    }
+  ]
+}
+
+Rules:
+- Score every answer from 0 to 10.
+- overallScore must be from 0 to 100.
+- Include one result for every question.
+- Penalize empty or irrelevant answers.
+- Do not include markdown or code fences.
+`,
+  });
+
+  const rawText = response.text?.trim();
+
+  if (!rawText) {
+    throw new Error("Gemini returned an empty evaluation");
+  }
+
+  const cleanedText = rawText
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  const evaluation = JSON.parse(cleanedText);
+
+  if (
+    !evaluation ||
+    !Array.isArray(evaluation.results)
+  ) {
+    throw new Error("Gemini returned an invalid evaluation");
+  }
+
+  return evaluation;
+};
+
 module.exports = {
   generateInterviewQuestions,
+  evaluateInterviewAnswers,
 };

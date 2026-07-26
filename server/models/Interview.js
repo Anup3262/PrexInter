@@ -90,6 +90,23 @@ const interviewSchema = new mongoose.Schema(
       type: [questionSchema],
       default: [],
     },
+
+    idealAnswer: {
+  type: String,
+  default: "",
+},
+
+summary: {
+  type: String,
+  default: "",
+},
+
+completedAt: {
+  type: Date,
+  default: null,
+},
+
+
   },
   {
     timestamps: true,
