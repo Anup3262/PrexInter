@@ -113,6 +113,32 @@ function Interview() {
     );
   }
 
+  const handleSubmitInterview = async () => {
+  try {
+    setSaving(true);
+    setError("");
+    setSavedMessage("");
+
+    const saved = await saveCurrentAnswer();
+
+    if (!saved) {
+      return;
+    }
+
+    await api.post(`/interviews/${id}/evaluate`);
+
+    navigate(`/result/${id}`);
+  } catch (requestError) {
+    setError(
+      requestError.response?.data?.error ||
+        requestError.response?.data?.message ||
+        "Unable to submit interview"
+    );
+  } finally {
+    setSaving(false);
+  }
+};
+
   if (error && !interview) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
@@ -263,12 +289,12 @@ function Interview() {
             </button>
 
             <button
-              type="button"
-              onClick={saveCurrentAnswer}
-              disabled={saving}
-              className="rounded-lg border border-indigo-600 px-5 py-3 font-semibold text-indigo-600 hover:bg-indigo-50 disabled:opacity-50"
-            >
-              Save answer
+  type="button"
+  onClick={handleSubmitInterview}
+  disabled={saving}
+  className="rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+         >
+  {saving ? "Evaluating..." : "Submit interview"}
             </button>
 
             {currentQuestionIndex <

@@ -10,7 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Interview from "./pages/Interview";
-
+import Result from "./pages/Result";
 function App() {
   return (
     <Routes>
@@ -41,6 +41,11 @@ function App() {
       />
 
       <Route
+    path="/result/:id"
+    element={<ProtectedRoute><Result /></ProtectedRoute>}
+/>
+
+      <Route
   path="/interviews/:id"
   element={
     <ProtectedRoute>
@@ -54,6 +59,8 @@ function App() {
         element={<Navigate to="/dashboard" replace />}
       />
     </Routes>
+
+    
     
 
     
