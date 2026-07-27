@@ -57,31 +57,31 @@ function Analytics() {
     <main className="min-h-screen bg-slate-100">
       <Sidebar />
 
-      <div className="lg:pl-64">
+      <div className="min-h-screen lg:pl-64">
         <Navbar />
 
-        <section className="mx-auto max-w-7xl p-8">
+        <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
           <AnalyticsHero />
 
           <OverviewCards analytics={analytics} />
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <ScoreTrendChart
-              interviews={analytics.interviews}
+              interviews={analytics.interviews || []}
             />
 
             <DifficultyChart
-              difficulty={analytics.difficulty}
+              difficulty={analytics.difficulty || {}}
             />
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <InterviewTypeChart
-              types={analytics.types}
+              types={analytics.types || {}}
             />
 
             <WeeklyActivity
-              interviews={analytics.interviews}
+              interviews={analytics.interviews || []}
             />
           </div>
 
@@ -89,7 +89,7 @@ function Analytics() {
             <AIInsights analytics={analytics} />
 
             <GoalProgress
-              totalInterviews={analytics.totalInterviews}
+              totalInterviews={analytics.totalInterviews || 0}
             />
           </div>
         </section>

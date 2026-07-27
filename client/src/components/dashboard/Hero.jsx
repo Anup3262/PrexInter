@@ -1,54 +1,66 @@
-
 import {
-  ArrowRight,
+  Award,
+  CheckCircle2,
   FileText,
+  Plus,
   Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-function Hero() {
+function Hero({ stats = {} }) {
   const navigate = useNavigate();
+
+  const {
+    total = 0,
+    completed = 0,
+    averageScore = 0,
+    bestScore = 0,
+  } = stats;
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-8 text-white shadow-2xl"
+      transition={{ duration: 0.45 }}
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-700 px-6 py-7 text-white shadow-2xl sm:px-8"
     >
-      <div className="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-indigo-200">
+      <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
+      <div className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-indigo-300/20 blur-3xl" />
+
+      <div className="relative grid items-center gap-7 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="max-w-2xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-sm font-semibold text-indigo-100 backdrop-blur">
             <Sparkles size={16} />
             AI-powered interview preparation
           </span>
 
-          <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
-            Prepare with purpose.
-            <span className="block text-indigo-400">
-              Interview with confidence.
+          <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight sm:text-4xl">
+            Practice today.
+            <span className="block text-indigo-200">
+              Perform tomorrow.
             </span>
           </h1>
 
-          <p className="mt-4 max-w-2xl leading-7 text-slate-300">
-            Generate role-specific interview questions, practise your
-            answers, and receive detailed AI feedback with ideal answers.
+          <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100 sm:text-base">
+            Create role-specific interviews, practise your answers,
+            and receive structured AI feedback and ideal responses.
           </p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={() => navigate("/interviews/create")}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-bold text-indigo-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-50"
             >
-              Start new interview
-              <ArrowRight size={18} />
+              <Plus size={18} />
+              Start AI interview
             </button>
 
             <button
               type="button"
               onClick={() => navigate("/resume-interview")}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3.5 font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 py-3 font-bold text-white backdrop-blur transition hover:bg-white/20"
             >
               <FileText size={18} />
               Resume interview
@@ -56,47 +68,67 @@ function Hero() {
           </div>
         </div>
 
-        <div className="relative hidden min-h-64 lg:block">
-          <div className="absolute right-0 top-1/2 w-full max-w-sm -translate-y-1/2 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-            <div className="rounded-2xl bg-white p-5 text-slate-900 shadow-2xl">
-              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                AI mock interview
-              </p>
+        <div className="grid grid-cols-2 overflow-hidden rounded-3xl border border-white/15 bg-white/10 backdrop-blur-xl">
+          <HeroMetric
+            icon={Sparkles}
+            value={total}
+            label="Total interviews"
+          />
 
-              <h2 className="mt-3 text-xl font-bold">
-                MERN Stack Developer
-              </h2>
+          <HeroMetric
+            icon={CheckCircle2}
+            value={completed}
+            label="Completed"
+            rightBorder={false}
+          />
 
-              <p className="mt-2 text-sm text-slate-500">
-                Medium · Technical · 5 Questions
-              </p>
+          <HeroMetric
+            icon={Award}
+            value={`${averageScore}%`}
+            label="Average score"
+            bottomBorder={false}
+          />
 
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full w-3/5 rounded-full bg-indigo-600" />
-              </div>
-
-              <div className="mt-5 rounded-2xl bg-slate-50 p-4">
-                <p className="text-sm font-semibold text-slate-700">
-                  Question 3 of 5
-                </p>
-
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Explain how JWT authentication works in a MERN
-                  application.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute bottom-2 left-2 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
-            <p className="text-xs text-slate-300">
-              Latest score
-            </p>
-            <p className="mt-1 text-2xl font-bold">86%</p>
-          </div>
+          <HeroMetric
+            icon={Award}
+            value={`${bestScore}%`}
+            label="Best score"
+            rightBorder={false}
+            bottomBorder={false}
+          />
         </div>
       </div>
     </motion.section>
+  );
+}
+
+function HeroMetric({
+  icon: Icon,
+  value,
+  label,
+  rightBorder = true,
+  bottomBorder = true,
+}) {
+  return (
+    <div
+      className={`p-5 ${
+        rightBorder ? "border-r border-white/10" : ""
+      } ${
+        bottomBorder ? "border-b border-white/10" : ""
+      }`}
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-indigo-100">
+        <Icon size={19} />
+      </span>
+
+      <p className="mt-3 text-2xl font-black text-white">
+        {value}
+      </p>
+
+      <p className="mt-1 text-xs text-indigo-100">
+        {label}
+      </p>
+    </div>
   );
 }
 
