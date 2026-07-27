@@ -1,110 +1,9 @@
-
 const Interview = require("../models/Interview");
 
 const {
   generateInterviewQuestions,
   evaluateInterviewAnswers,
 } = require("../services/geminiService");
-
-const evaluateInterview = async (req, res) => {
-  try {
-    const interview = await Interview.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
-
-    if (!interview) {
-      return res.status(404).json({
-        success: false,
-        message: "Interview not found",
-      });
-    }
-
-    if (!interview.questions.length) {
-      return res.status(400).json({
-        success: false,
-        message: "Interview has no questions",
-      });
-    }
-
-    const evaluation = await evaluateInterviewAnswers({
-      role: interview.role,
-      difficulty: interview.difficulty,
-      questions: interview.questions,
-    });
-
-    if (
-      !evaluation ||
-      !Array.isArray(evaluation.results)
-    ) {
-      return res.status(502).json({
-        success: false,
-        message: "Gemini returned an invalid evaluation",
-      });
-    }
-
-    evaluation.results.forEach((result) => {
-      const questionIndex = Number(result.questionIndex);
-
-      if (
-        !Number.isInteger(questionIndex) ||
-        questionIndex < 0 ||
-        questionIndex >= interview.questions.length
-      ) {
-        return;
-      }
-
-      const question = interview.questions[questionIndex];
-
-      question.score = Math.max(
-        0,
-        Math.min(10, Number(result.score) || 0)
-      );
-
-      question.feedback =
-        typeof result.feedback === "string"
-          ? result.feedback
-          : "";
-
-      question.idealAnswer =
-        typeof result.idealAnswer === "string"
-          ? result.idealAnswer
-          : "";
-    });
-
-    interview.score = Math.max(
-      0,
-      Math.min(100, Number(evaluation.overallScore) || 0)
-    );
-
-    interview.summary =
-      typeof evaluation.summary === "string"
-        ? evaluation.summary
-        : "";
-
-    interview.status = "completed";
-    interview.completedAt = new Date();
-
-    await interview.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Interview evaluated successfully",
-      overallScore: interview.score,
-      summary: interview.summary,
-      interview,
-    });
-  } catch (error) {
-  console.error("Evaluate interview error:", error);
-
-  return res.status(500).json({
-    success: false,
-    message: "Unable to evaluate interview",
-    error: error.message,
-    stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-  });
-}
-};
 
 const createInterview = async (req, res) => {
   try {
@@ -128,8 +27,9 @@ const createInterview = async (req, res) => {
       role,
       difficulty,
       type,
-      questionCount: questionCount || 5,
-      duration: duration || 20,
+      questionCount: Number(questionCount) || 5,
+      duration: Number(duration) || 20,
+      status: "pending",
     });
 
     return res.status(201).json({
@@ -279,8 +179,6 @@ const deleteInterview = async (req, res) => {
 
 const generateQuestions = async (req, res) => {
   try {
-    console.log("Generate questions request received");
-
     const interview = await Interview.findOne({
       _id: req.params.id,
       user: req.user._id,
@@ -292,8 +190,6 @@ const generateQuestions = async (req, res) => {
         message: "Interview not found",
       });
     }
-
-    console.log("Interview found:", interview._id.toString());
 
     const generatedQuestions = await generateInterviewQuestions({
       role: interview.role,
@@ -314,13 +210,17 @@ const generateQuestions = async (req, res) => {
 
     interview.questions = generatedQuestions.map((item) => ({
       question: item.question,
-      category: item.category || interview.type,
+      category: item.category || interview.type || "General",
       answer: "",
       feedback: "",
+      idealAnswer: "",
       score: 0,
     }));
 
     interview.status = "in-progress";
+    interview.score = 0;
+    interview.summary = "";
+    interview.completedAt = null;
 
     await interview.save();
 
@@ -401,7 +301,111 @@ const saveAnswer = async (req, res) => {
   }
 };
 
+const evaluateInterview = async (req, res) => {
+  try {
+    const interview = await Interview.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
 
+    if (!interview) {
+      return res.status(404).json({
+        success: false,
+        message: "Interview not found",
+      });
+    }
+
+    if (!Array.isArray(interview.questions) || interview.questions.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Interview has no questions",
+      });
+    }
+
+    const evaluation = await evaluateInterviewAnswers({
+      role: interview.role,
+      difficulty: interview.difficulty,
+      type: interview.type,
+      questions: interview.questions,
+    });
+
+    if (!evaluation || !Array.isArray(evaluation.results)) {
+      return res.status(502).json({
+        success: false,
+        message: "Gemini returned an invalid evaluation",
+      });
+    }
+
+    evaluation.results.forEach((result) => {
+      const questionIndex = Number(result.questionIndex);
+
+      if (
+        !Number.isInteger(questionIndex) ||
+        questionIndex < 0 ||
+        questionIndex >= interview.questions.length
+      ) {
+        return;
+      }
+
+      const question = interview.questions[questionIndex];
+
+      question.score = Math.max(
+        0,
+        Math.min(10, Math.round(Number(result.score) || 0))
+      );
+
+      question.feedback =
+        typeof result.feedback === "string"
+          ? result.feedback.trim()
+          : "No feedback generated.";
+
+      question.idealAnswer =
+        typeof result.idealAnswer === "string" &&
+        result.idealAnswer.trim()
+          ? result.idealAnswer.trim()
+          : "No ideal answer generated.";
+    });
+
+    const totalScore = interview.questions.reduce(
+      (sum, question) => sum + (Number(question.score) || 0),
+      0
+    );
+
+    interview.score = Math.round(
+      (totalScore / (interview.questions.length * 10)) * 100
+    );
+
+    interview.summary =
+      typeof evaluation.summary === "string"
+        ? evaluation.summary.trim()
+        : "Interview evaluation completed.";
+
+    interview.status = "completed";
+    interview.completedAt = new Date();
+
+    await interview.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Interview evaluated successfully",
+      overallScore: interview.score,
+      summary: interview.summary,
+      interview,
+    });
+  } catch (error) {
+    console.error("Evaluate interview error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to evaluate interview",
+      error: error.message,
+      stack:
+        process.env.NODE_ENV === "development"
+          ? error.stack
+          : undefined,
+    });
+  }
+};
 
 module.exports = {
   createInterview,

@@ -2,9 +2,13 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+
 const connectDatabase = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const interviewRoutes = require("./routes/interviewRoutes");
+const resumeRoutes = require("./routes/resumeRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
+
 const app = express();
 
 app.use(
@@ -24,6 +28,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/interviews", interviewRoutes);
+app.use("/api/resume", resumeRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({

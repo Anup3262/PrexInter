@@ -24,10 +24,16 @@ const questionSchema = new mongoose.Schema(
       default: "",
     },
 
+    idealAnswer: {
+      type: String,
+      default: "",
+    },
+
     score: {
       type: Number,
       default: 0,
       min: 0,
+      max: 10,
     },
   },
   {
@@ -84,29 +90,23 @@ const interviewSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+      max: 100,
+    },
+
+    summary: {
+      type: String,
+      default: "",
+    },
+
+    completedAt: {
+      type: Date,
+      default: null,
     },
 
     questions: {
       type: [questionSchema],
       default: [],
     },
-
-    idealAnswer: {
-  type: String,
-  default: "",
-},
-
-summary: {
-  type: String,
-  default: "",
-},
-
-completedAt: {
-  type: Date,
-  default: null,
-},
-
-
   },
   {
     timestamps: true,

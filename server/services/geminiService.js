@@ -1,75 +1,88 @@
 const { GoogleGenAI } = require("@google/genai");
 
+const getAIClient = () => {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is not loaded");
+  }
+
+  return new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+  });
+};
+
+
+
+const cleanJsonResponse = (text) => {
+  if (!text) {
+    throw new Error("Gemini returned an empty response");
+  }
+
+  return text
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+};
+
 const generateInterviewQuestions = async ({
   role,
   difficulty,
   type,
   questionCount,
+  resumeContext = null,
 }) => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is not loaded");
-  }
 
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-  });
-
+ 
+  const ai = getAIClient();
   const safeQuestionCount = Number(questionCount) || 5;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `
-You are an experienced interview evaluator.
+  model: "gemini-3-flash-preview",
+  contents: `
+You are an experienced technical interviewer.
 
-Generate exactly ${safeQuestionCount} interview questions.
+Generate ${questionCount} ${difficulty} ${type} interview questions.
 
-Job role: ${role}
-Difficulty: ${difficulty}
-Interview type: ${type}
+Role: ${role}
 
-Return only valid JSON using this exact format:
+Resume context:
+${
+  resumeContext
+    ? JSON.stringify(resumeContext, null, 2)
+    : "No resume context provided"
+}
 
+Instructions:
+- If resume context is available, ask questions based on the candidate's:
+  - Skills
+  - Projects
+  - Experience
+- Also include core interview questions for the selected role.
+- Return exactly ${questionCount} questions.
+- Return only valid JSON.
+
+Format:
 [
   {
-    "question": "Interview question",
-    "category": "Relevant category"
+    "question": "...",
+    "category": "..."
   }
 ]
-
-Requirements:
-- Return exactly ${safeQuestionCount} questions.
-- Do not include answers.
-- Do not include Markdown.
-- Do not include code fences.
-- Do not include explanations before or after the JSON.
-- Avoid duplicate questions.
-- Match the selected role and difficulty.
 `,
-  });
-
-  const rawText = response.text?.trim();
-
-  if (!rawText) {
-    throw new Error("Gemini returned an empty response");
-  }
-
-  const cleanedText = rawText
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
+});
+  const cleanedText = cleanJsonResponse(response.text);
 
   let questions;
 
   try {
     questions = JSON.parse(cleanedText);
-  } catch (error) {
-    console.error("Gemini raw response:", rawText);
-    throw new Error("Gemini returned invalid JSON");
+  } catch {
+    console.error("Gemini question response:", response.text);
+    throw new Error("Gemini returned invalid question JSON");
   }
 
   if (!Array.isArray(questions)) {
-    throw new Error("Gemini response is not an array");
+    throw new Error("Gemini question response is not an array");
   }
 
   const validQuestions = questions
@@ -83,8 +96,7 @@ Requirements:
     .map((item) => ({
       question: item.question.trim(),
       category:
-        typeof item.category === "string" &&
-        item.category.trim()
+        typeof item.category === "string" && item.category.trim()
           ? item.category.trim()
           : type || "General",
     }));
@@ -96,80 +108,119 @@ Requirements:
   return validQuestions;
 };
 
-const evaluateInterviewAnswers = async ({ role, difficulty, questions }) => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is not loaded");
-  }
+const evaluateInterviewAnswers = async ({
+  role,
+  difficulty,
+  type,
+  questions,
+}) => {
+  const ai = getAIClient();
 
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-  });
+  const preparedQuestions = questions.map((item, index) => ({
+    questionIndex: index,
+    question: item.question,
+    category: item.category || "General",
+    candidateAnswer: item.answer?.trim() || "",
+  }));
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `
-You are an experienced interview evaluator.
+You are a senior technical interviewer and subject-matter expert.
 
-Evaluate the candidate's answers for this interview.
+Evaluate the candidate for this interview.
 
 Role: ${role}
 Difficulty: ${difficulty}
+Interview type: ${type || "General"}
 
-Questions and answers:
-${JSON.stringify(
-  questions.map((item, index) => ({
-    index,
-    question: item.question,
-    answer: item.answer || "",
-  })),
-  null,
-  2
-)}
+Questions and candidate answers:
+
+${JSON.stringify(preparedQuestions, null, 2)}
 
 Return only valid JSON in this exact format:
 
 {
   "overallScore": 0,
-  "summary": "Overall feedback",
+  "summary": "Concise overall assessment",
   "results": [
     {
       "questionIndex": 0,
       "score": 0,
-      "feedback": "Specific feedback",
-      "idealAnswer": "A strong example answer"
+      "feedback": "Specific feedback about the candidate answer",
+      "idealAnswer": "A complete and technically accurate model answer"
     }
   ]
 }
 
 Rules:
-- Score every answer from 0 to 10.
-- overallScore must be from 0 to 100.
-- Include one result for every question.
-- Penalize empty or irrelevant answers.
+- Return one result for every question.
+- score must be an integer from 0 to 10.
+- overallScore must be an integer from 0 to 100.
+- Give 0 or 1 for empty, irrelevant, or nonsensical answers.
+- Do not praise incorrect statements.
+- Explicitly identify mistakes.
+- idealAnswer is required and must never be empty.
+- idealAnswer must directly answer the exact question.
+- Keep each idealAnswer between 80 and 180 words.
 - Do not include markdown or code fences.
+- When resume context is provided, include questions about the candidate's listed skills, projects, and experience.
 `,
   });
 
-  const rawText = response.text?.trim();
+  console.log("========== GEMINI RAW RESPONSE ==========");
+console.log(response.text);
+console.log("=========================================");
 
-  if (!rawText) {
-    throw new Error("Gemini returned an empty evaluation");
+  const cleanedText = cleanJsonResponse(response.text);
+
+  let evaluation;
+
+  try {
+    evaluation = JSON.parse(cleanedText);
+  } catch {
+    console.error("Gemini evaluation response:", response.text);
+    throw new Error("Gemini returned invalid evaluation JSON");
   }
-
-  const cleanedText = rawText
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-
-  const evaluation = JSON.parse(cleanedText);
 
   if (
     !evaluation ||
-    !Array.isArray(evaluation.results)
+    !Array.isArray(evaluation.results) ||
+    evaluation.results.length !== questions.length
   ) {
-    throw new Error("Gemini returned an invalid evaluation");
+    throw new Error("Gemini returned an incomplete evaluation");
   }
+
+  evaluation.results = evaluation.results.map((result, index) => ({
+    questionIndex: index,
+    score: Math.max(
+      0,
+      Math.min(10, Math.round(Number(result.score) || 0))
+    ),
+    feedback:
+      typeof result.feedback === "string" && result.feedback.trim()
+        ? result.feedback.trim()
+        : "No feedback generated.",
+    idealAnswer:
+      typeof result.idealAnswer === "string" &&
+      result.idealAnswer.trim()
+        ? result.idealAnswer.trim()
+        : "No ideal answer generated.",
+  }));
+
+  evaluation.overallScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(Number(evaluation.overallScore) || 0)
+    )
+  );
+
+  evaluation.summary =
+    typeof evaluation.summary === "string" &&
+    evaluation.summary.trim()
+      ? evaluation.summary.trim()
+      : "Interview evaluation completed.";
 
   return evaluation;
 };
