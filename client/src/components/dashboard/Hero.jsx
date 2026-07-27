@@ -23,7 +23,7 @@ function Hero({ stats = {} }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-700 px-6 py-7 text-white shadow-2xl sm:px-8"
+     className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-700 px-6 py-7 text-white shadow-2xl sm:px-8"
     >
       <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
       <div className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-indigo-300/20 blur-3xl" />
