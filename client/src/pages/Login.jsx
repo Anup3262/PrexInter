@@ -1,129 +1,28 @@
-import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-
-import api from "../services/api";
-import { useAuth } from "../context/AuthContext";
+import MarketingPanel from "../components/auth/MarketingPanel";
+import LoginForm from "../components/auth/LoginForm";
+import AvatarGrid from "../components/auth/AvatarGrid";
+import FooterBar from "../components/auth/FooterBar";
 
 function Login() {
-  const navigate = useNavigate();
-  const { user, login } = useAuth();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  const handleChange = (event) => {
-    setFormData((current) => ({
-      ...current,
-      [event.target.name]: event.target.value,
-    }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-    setSubmitting(true);
-
-    try {
-      const response = await api.post("/auth/login", formData);
-
-      login(response.data.token, response.data.user);
-      navigate("/dashboard");
-    } catch (requestError) {
-      setError(
-        requestError.response?.data?.message ||
-          "Login failed. Please try again."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10">
-      <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-indigo-600">PrexInter</h1>
+    <main className="relative min-h-screen overflow-hidden bg-[#050716] text-white">
+      <div className="absolute -left-48 top-1/3 h-80 w-80 rounded-full bg-violet-700/20 blur-[120px]" />
+      <div className="absolute -right-36 top-0 h-80 w-80 rounded-full bg-indigo-600/20 blur-[120px]" />
+      <div className="absolute bottom-0 left-1/2 h-64 w-64 rounded-full bg-purple-700/10 blur-[110px]" />
 
-          <p className="mt-2 text-sm text-slate-500">
-            Log in to continue your interview preparation.
-          </p>
-        </div>
+      <div className="relative grid min-h-screen lg:grid-cols-[42%_58%]">
+        <MarketingPanel />
 
-        {error && (
-          <div className="mb-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+        <section className="relative flex items-center justify-center px-4 py-6 sm:px-6 lg:px-8 lg:pb-20">
+          <AvatarGrid />
+
+          <div className="relative z-10 w-full">
+            <LoginForm />
           </div>
-        )}
+        </section>
+      </div>
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Email
-            </label>
-
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Password
-            </label>
-
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Logging in..." : "Log in"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-600">
-          Don&apos;t have an account?{" "}
-          <Link
-            to="/register"
-            className="font-semibold text-indigo-600 hover:text-indigo-700"
-          >
-            Register
-          </Link>
-        </p>
-      </section>
+      <FooterBar />
     </main>
   );
 }
