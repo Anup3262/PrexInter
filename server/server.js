@@ -71,15 +71,6 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use((error, req, res, next) => {
-  console.error("Server error:", error);
-
-  res.status(500).json({
-    success: false,
-    message: error.message || "Internal server error",
-  });
-});
-
 const PORT = process.env.PORT || 5000;
 
 connectDatabase()
