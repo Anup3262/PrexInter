@@ -46,7 +46,7 @@ function GoalProgress({
 
         <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-200">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 transition-all duration-500"
+            className="h-full rounded-full bg-linear-to-r from-indigo-600 to-violet-600 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>

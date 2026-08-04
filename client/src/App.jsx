@@ -24,53 +24,38 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-           path="/resume-interview"
-           element={<ResumeInterview />}
-      />
+      <Route element={<ProtectedRoute />}>
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
-      <Route
-        path="/interviews/create"
-        element={
-          <ProtectedRoute>
-            <CreateInterview />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/interviews/create"
+          element={<CreateInterview />}
+        />
 
-      <Route
-    path="/result/:id"
-    element={<ProtectedRoute><Result /></ProtectedRoute>}
-/>
+        <Route
+          path="/interviews/:id"
+          element={<Interview />}
+        />
 
-      <Route
-  path="/interviews/:id"
-  element={
-    <ProtectedRoute>
-      <Interview />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/result/:id"
+          element={<Result />}
+        />
+
+        <Route
+          path="/resume-interview"
+          element={<ResumeInterview />}
+        />
+      </Route>
 
       <Route
         path="*"
         element={<Navigate to="/dashboard" replace />}
       />
     </Routes>
-
-    
-    
-
-    
   );
 }
 

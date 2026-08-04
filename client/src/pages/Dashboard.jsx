@@ -118,13 +118,13 @@ function Dashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <main className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50">
       <Sidebar />
 
       <div className="min-h-screen lg:pl-64">
         <Navbar />
 
-        <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-375 px-4 py-6 sm:px-6 lg:px-8">
           <Hero stats={stats} />
 
           <section className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -184,29 +184,38 @@ function Dashboard() {
               </section>
 
               <section className="mt-10">
-                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-                  <div>
-                    <h2 className="text-2xl font-black tracking-tight text-slate-950">
-                      Recent interviews
-                    </h2>
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+  <div>
+    <h2 className="text-2xl font-black tracking-tight text-slate-950">
+      Recent interviews
+    </h2>
 
-                    <p className="mt-1 text-sm text-slate-500">
-                      Continue practising or review your completed
-                      results.
-                    </p>
-                  </div>
+    <p className="mt-1 text-sm text-slate-500">
+      Continue practising or review your completed results.
+    </p>
+  </div>
 
-                  {interviews.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => navigate("/interviews")}
-                      className="font-semibold text-indigo-600 transition hover:text-indigo-700"
-                    >
-                      View all
-                    </button>
-                  )}
-                </div>
+  <div className="flex items-center gap-3">
+    {interviews.length > 0 && (
+      <button
+        type="button"
+        onClick={() => navigate("/interviews")}
+        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600"
+      >
+        View all
+      </button>
+    )}
 
+    <button
+      type="button"
+      onClick={() => navigate("/interviews/create")}
+      className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700"
+    >
+      <Plus size={18} />
+      Start interview
+    </button>
+  </div>
+</div>
                 {recentInterviews.length === 0 ? (
                   <EmptyInterviewState
                     onCreate={() =>
@@ -245,7 +254,7 @@ function EmptyInterviewState({ onCreate }) {
   return (
     <div className="app-card mt-6 flex min-h-80 items-center justify-center border-dashed p-8 text-center">
       <div className="max-w-md">
-        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-600">
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-linear-to-br from-indigo-100 to-violet-100 text-indigo-600">
           <BrainCircuit size={32} />
         </span>
 

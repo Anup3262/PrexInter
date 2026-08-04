@@ -1,7 +1,9 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -9,57 +11,91 @@ import api from "../services/api";
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadCurrentUser = async () => {
-      const token = localStorage.getItem("prexinterToken");
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem("prexinterToken");
 
-      if (!token) {
-        setLoading(false);
-        return;
+    if (!token) {
+      setUser(null);
+      return null;
+    }
+
+    try {
+      const response = await api.get("/auth/me");
+
+      const currentUser = response.data?.user;
+
+      if (!currentUser) {
+        throw new Error("User data was not returned");
       }
 
+      setUser(currentUser);
+      return currentUser;
+    } catch (error) {
+      localStorage.removeItem("prexinterToken");
+      setUser(null);
+      throw error;
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
       try {
-        const response = await api.get("/auth/me");
-        setUser(response.data.user);
+        await refreshUser();
       } catch {
-        localStorage.removeItem("prexinterToken");
-        setUser(null);
+        // Invalid or expired token is already cleared in refreshUser.
       } finally {
         setLoading(false);
       }
     };
 
     loadCurrentUser();
+  }, [refreshUser]);
+
+  const login = useCallback((token, userData) => {
+    if (!token) {
+      throw new Error("Authentication token is required");
+    }
+
+    localStorage.setItem("prexinterToken", token);
+    setUser(userData || null);
   }, []);
 
-  const login = (token, userData) => {
-    localStorage.setItem("prexinterToken", token);
-    setUser(userData);
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("prexinterToken");
     setUser(null);
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      login,
+      logout,
+      refreshUser,
+      isAuthenticated: Boolean(user),
+    }),
+    [user, loading, login, logout, refreshUser]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error(
+      "useAuth must be used inside an AuthProvider"
+    );
+  }
+
+  return context;
+}

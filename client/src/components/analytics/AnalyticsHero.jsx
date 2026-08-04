@@ -2,7 +2,7 @@ import { Sparkles, TrendingUp } from "lucide-react";
 
 function AnalyticsHero() {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-700 p-8 text-white shadow-2xl">
+    <section className="relative overflow-hidden rounded-3xl bg-linear-to-r from-indigo-600 via-violet-600 to-purple-700 p-8 text-white shadow-2xl">
 
       <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
       <div className="absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-indigo-300/20 blur-3xl" />
